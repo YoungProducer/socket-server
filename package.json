@@ -1,0 +1,26 @@
+{
+  "name": "socket-server",
+  "version": "1.0.0",
+  "description": "Server for real-time actions between users.",
+  "main": "index.js",
+  "author": "Oleksandr Bezrukov",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "start": "node bin/app.js",
+    "build": "rm -rf ./dist && tsc",
+    "dev": "ts-node-dev --no-notify --respawn --transpileOnly ./bin/app.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.6",
+    "dotenv": "^8.2.0",
+    "ts-node": "^8.10.1",
+    "ts-node-dev": "^1.0.0-pre.44",
+    "tslint": "^6.1.2",
+    "tslint-config-airbnb": "^5.11.2",
+    "typescript": "^3.8.3"
+  }
+}
