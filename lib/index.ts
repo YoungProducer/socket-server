@@ -5,9 +5,9 @@ import dotenv from 'dotenv';
 
 import { parseEnv, EnvConfigInput } from './utils/parse-env';
 
-const app: express.Application = express();
-const server = new Server(app);
-const io = socket(server);
+export const app: express.Application = express();
+export const server = new Server(app);
+export const io = socket(server);
 
 const envConfig = dotenv.config() as EnvConfigInput;
 
@@ -23,5 +23,3 @@ io.on('connection', (socket) => {
         console.log(data);
     });
 });
-
-export default { server, app };
