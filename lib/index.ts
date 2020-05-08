@@ -1,16 +1,27 @@
 import express, { Request, NextFunction, Response } from 'express';
+import socket from 'socket.io';
+import { Server } from 'http';
 import dotenv from 'dotenv';
 
 import { parseEnv, EnvConfigInput } from './utils/parse-env';
 
-const server: express.Application = express();
+const app: express.Application = express();
+const server = new Server(app);
+const io = socket(server);
 
 const envConfig = dotenv.config() as EnvConfigInput;
 
-parseEnv(server, envConfig);
+parseEnv(app, envConfig);
 
-server.get('/', async (req: Request, res: Response, next: NextFunction) => {
+app.get('/', async (req: Request, res: Response, next: NextFunction) => {
     res.status(200).send('Hello world!');
 });
 
-export default server;
+io.on('connection', (socket) => {
+    socket.emit('matrix', { hello: 'world' });
+    socket.on('my other event', (data) => {
+        console.log(data);
+    });
+});
+
+export default { server, app };
