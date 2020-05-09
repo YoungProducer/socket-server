@@ -1,9 +1,14 @@
 import { Server } from 'socket.io';
 
+interface UserMessage {
+    body: string;
+    owner: string;
+}
+
 interface Chat {
     user1: string;
     user2: string;
-    messages: string[];
+    messages: UserMessage[];
 }
 
 interface User {
@@ -40,7 +45,10 @@ export class ChatSocket {
         this.chatList = [{
             user1: 'foo',
             user2: 'bar',
-            messages: ['123'],
+            messages: [{
+                body: 'hello',
+                owner: 'foo',
+            }],
         }];
         this.users = [];
         this.io = socket;
@@ -83,7 +91,10 @@ export class ChatSocket {
                             chat.user2 === message.receiver)) {
                             return {
                                 ...chat,
-                                messages: [...chat.messages, message.body],
+                                messages: [...chat.messages, {
+                                    body: message.body,
+                                    owner: message.sender,
+                                }],
                             };
                         }
 
@@ -93,7 +104,10 @@ export class ChatSocket {
                     this.chatList.push({
                         user1: message.receiver,
                         user2: message.sender,
-                        messages: [message.body],
+                        messages: [{
+                            body: message.body,
+                            owner: message.sender,
+                        }],
                     });
                 }
 
