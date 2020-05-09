@@ -22,6 +22,12 @@ interface Message {
     body: string;
 }
 
+interface OutComingMessage {
+    contact: string;
+    body: string;
+    owner: string;
+}
+
 interface ChatListPayload {
     userId: string;
 }
@@ -115,16 +121,28 @@ export class ChatSocket {
                 const sender = this.users.find(user => user.id === message.sender);
 
                 if (receiver) {
+                    const outComingMessage: OutComingMessage = {
+                        body: message.body,
+                        contact: message.sender,
+                        owner: message.sender,
+                    };
+
                     this.io.to(receiver.socketId).emit('add-message-response', {
                         status: 'Received!',
-                        data: message,
+                        data: outComingMessage,
                     });
                 }
 
                 if (sender) {
+                    const outComingMessage: OutComingMessage = {
+                        body: message.body,
+                        contact: message.receiver,
+                        owner: message.sender,
+                    };
+
                     this.io.to(sender.socketId).emit('add-message-response', {
                         status: 'Sent!',
-                        data: message,
+                        data: outComingMessage,
                     });
                 }
             });
