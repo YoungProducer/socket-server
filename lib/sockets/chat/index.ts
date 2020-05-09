@@ -1,8 +1,8 @@
 import { Server } from 'socket.io';
 
 interface Chat {
-    receiver: string;
-    sender: string;
+    user1: string;
+    user2: string;
     messages: string[];
 }
 
@@ -38,8 +38,8 @@ export class ChatSocket {
 
     constructor(socket: Server) {
         this.chatList = [{
-            receiver: 'foo',
-            sender: 'bar',
+            user1: 'foo',
+            user2: 'bar',
             messages: ['123'],
         }];
         this.users = [];
@@ -59,9 +59,9 @@ export class ChatSocket {
 
             socket.on('chat-list', async ({ userId }: ChatListPayload) => {
                 const chatList = this.chatList
-                    .filter(chat => chat.receiver === userId)
+                    .filter(chat => chat.user1 === userId || chat.user2 === userId)
                     .map(chat => ({
-                        sender: chat.sender,
+                        contact: chat.user1 === userId ? chat.user2 : chat.user1,
                         messages: chat.messages,
                     }));
 
@@ -70,13 +70,17 @@ export class ChatSocket {
 
             socket.on('add-message', async (message: AddMessagePayload) => {
                 const messageExist = this.chatList.some(chat =>
-                    chat.receiver === message.receiver &&
-                    chat.sender === message.sender);
+                    (chat.user1 === message.receiver &&
+                    chat.user2 === message.sender) ||
+                    (chat.user1 === message.sender &&
+                    chat.user2 === message.receiver));
 
                 if (messageExist) {
                     this.chatList = this.chatList.map(chat => {
-                        if (chat.receiver === message.receiver &&
-                            chat.sender === message.sender) {
+                        if ((chat.user1 === message.receiver &&
+                            chat.user2 === message.sender) ||
+                            (chat.user1 === message.sender &&
+                            chat.user2 === message.receiver)) {
                             return {
                                 ...chat,
                                 messages: [...chat.messages, message.body],
@@ -87,16 +91,17 @@ export class ChatSocket {
                     });
                 } else {
                     this.chatList.push({
-                        receiver: message.receiver,
-                        sender: message.sender,
+                        user1: message.receiver,
+                        user2: message.sender,
                         messages: [message.body],
                     });
                 }
 
-                const receiverSocketId = this.users.find(user => user.id === message.receiver);
+                const receiver = this.users.find(user => user.id === message.receiver);
 
-                if (receiverSocketId) {
-                    this.io.emit('add-message-response', message);
+                if (receiver) {
+                    console.log(receiver);
+                    this.io.to(receiver.socketId).emit('add-message-response', message);
                 }
             });
 
