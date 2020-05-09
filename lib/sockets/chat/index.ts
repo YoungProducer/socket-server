@@ -102,15 +102,7 @@ export class ChatSocket {
                     this.chatList.push(newChat);
                 }
 
-                const receiver = this.users.find(user => user.id === receiverId);
                 const sender = this.users.find(user => user.id === userId);
-
-                if (receiver) {
-                    this.io.to(receiver.socketId).emit('create-chat-response', {
-                        contact: userId,
-                        messages: [],
-                    });
-                }
 
                 if (sender) {
                     this.io.to(sender.socketId).emit('create-chat-response', {
@@ -121,44 +113,52 @@ export class ChatSocket {
             });
 
             socket.on('add-message', async (message: AddMessagePayload) => {
-                const messageExist = this.chatList.some(chat =>
+                const chatExists = this.chatList.some(chat =>
                     (chat.user1 === message.receiver &&
                     chat.user2 === message.sender) ||
                     (chat.user1 === message.sender &&
                     chat.user2 === message.receiver));
 
-                if (messageExist) {
+                let createdChat: Chat | undefined = undefined;
+                let hasMessages: boolean = true;
+
+                if (chatExists) {
                     this.chatList = this.chatList.map(chat => {
                         if ((chat.user1 === message.receiver &&
                             chat.user2 === message.sender) ||
                             (chat.user1 === message.sender &&
                             chat.user2 === message.receiver)) {
-                            return {
+                            hasMessages = chat.messages.length > 0;
+                            createdChat = {
                                 ...chat,
                                 messages: [...chat.messages, {
                                     body: message.body,
                                     owner: message.sender,
                                 }],
                             };
+
+                            return createdChat;
                         }
 
                         return chat;
                     });
                 } else {
-                    this.chatList.push({
+                    createdChat = {
                         user1: message.receiver,
                         user2: message.sender,
                         messages: [{
                             body: message.body,
                             owner: message.sender,
                         }],
-                    });
+                    };
+
+                    this.chatList.push(createdChat);
                 }
 
                 const receiver = this.users.find(user => user.id === message.receiver);
                 const sender = this.users.find(user => user.id === message.sender);
 
-                if (receiver) {
+                if (receiver && chatExists && hasMessages) {
                     const outComingMessage: OutComingMessage = {
                         body: message.body,
                         contact: message.sender,
@@ -181,6 +181,13 @@ export class ChatSocket {
                     this.io.to(sender.socketId).emit('add-message-response', {
                         status: 'Sent!',
                         data: outComingMessage,
+                    });
+                }
+
+                if (receiver && chatExists && createdChat && !hasMessages) {
+                    this.io.to(receiver.socketId).emit('create-chat-response', {
+                        contact: message.sender,
+                        messages: createdChat.messages,
                     });
                 }
             });
