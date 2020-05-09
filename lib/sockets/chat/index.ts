@@ -56,10 +56,7 @@ export class ChatSocket {
         this.chatList = [{
             user1: 'foo',
             user2: 'bar',
-            messages: [{
-                body: 'hello',
-                owner: 'foo',
-            }],
+            messages: [],
         }];
         this.users = [];
         this.io = socket;
