@@ -32,6 +32,11 @@ interface ChatListPayload {
     userId: string;
 }
 
+interface CreateChatPayload {
+    userId: string;
+    receiverId: string;
+}
+
 interface JoinPayload {
     userId: string;
 }
@@ -80,6 +85,39 @@ export class ChatSocket {
                     }));
 
                 this.io.to(socket.id).emit('chat-list-response', chatList);
+            });
+
+            socket.on('create-chat', async ({ userId, receiverId }: CreateChatPayload) => {
+                const indexOfChat = this.chatList.findIndex(chat =>
+                    (chat.user1 === userId && chat.user2 === receiverId) ||
+                    (chat.user1 === receiverId && chat.user1 === userId));
+
+                if (indexOfChat === -1) {
+                    const newChat: Chat = {
+                        user1: userId,
+                        user2: receiverId,
+                        messages: [],
+                    };
+
+                    this.chatList.push(newChat);
+                }
+
+                const receiver = this.users.find(user => user.id === receiverId);
+                const sender = this.users.find(user => user.id === userId);
+
+                if (receiver) {
+                    this.io.to(receiver.socketId).emit('create-chat-response', {
+                        contact: userId,
+                        messages: [],
+                    });
+                }
+
+                if (sender) {
+                    this.io.to(sender.socketId).emit('create-chat-response', {
+                        contact: receiverId,
+                        messages: [],
+                    });
+                }
             });
 
             socket.on('add-message', async (message: AddMessagePayload) => {
