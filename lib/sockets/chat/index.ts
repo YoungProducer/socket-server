@@ -98,10 +98,20 @@ export class ChatSocket {
                 }
 
                 const receiver = this.users.find(user => user.id === message.receiver);
+                const sender = this.users.find(user => user.id === message.sender);
 
                 if (receiver) {
-                    console.log(receiver);
-                    this.io.to(receiver.socketId).emit('add-message-response', message);
+                    this.io.to(receiver.socketId).emit('add-message-response', {
+                        status: 'Received!',
+                        data: message,
+                    });
+                }
+
+                if (sender) {
+                    this.io.to(sender.socketId).emit('add-message-response', {
+                        status: 'Sent!',
+                        data: message,
+                    });
                 }
             });
 
